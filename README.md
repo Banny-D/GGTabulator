@@ -49,5 +49,8 @@ https://github.com/Banny-D/GGTabulator/releases/download/Latest/GGT_beta.zip)
 - [ ] 表格完整性校验
 - [ ] 更轻量化的程序打包
 
+## 打包exe
+`pyinstaller -F main.py -i images/icon.ico`
+
 ## 开发者
 邮箱：<xinyi.bit@qq.com>
