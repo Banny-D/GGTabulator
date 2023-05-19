@@ -1,7 +1,7 @@
 # GGTabulator
 Goods Groupon Tabulater——谷圈开团打表小助手  
 [Github Release - 点击下载](
-https://github.com/Banny-D/GGTabulator/releases/download/Latest/GGT_beta.zip)
+https://github.com/Banny-D/GGTabulator/releases/download/Latest/GGT_latest.zip)
 
 ## 简述
 
