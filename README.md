@@ -33,6 +33,7 @@ https://github.com/Banny-D/GGTabulator/releases/download/Latest/GGT_beta.zip)
 2. 将`GGT.exe`、`input.xlsx`、`symbol.xlsx`文件放置在同一目录下即可
 
 ## 使用说明
+### v1.0.0-beta
 - `input.xlsx`是输入部分。
     - 注意一定需要将**均价**写在`D1`单元格内
     - `A1`单元格可以修改为需要的名字
@@ -44,13 +45,23 @@ https://github.com/Banny-D/GGTabulator/releases/download/Latest/GGT_beta.zip)
     - 这个表格可以编辑，`A`列为排表中商品的名称，`B`列为简写
     - 不全也没关系，找不到的内容将沿用原来的名称
 - `output.xlsx`是输出表格
+### v1.1.0-beta新增功能
+- 新增不同分盒，不同均价的功能
+    - `D1`单元格是默认均价，如果后面分隔行的D列为空，则使用D1单元格设置的均价
+    - 可参照新的`input.xlsx`文件，在分隔行的D列填写均价
+    - 如果是单领表，可以在均价处设置为0，单领的单价写在调价列
+- 校验功能
+    - 表格完整性校验：名单不全，提示最先出现不全的行数并结束程序，不输出表格
+    - 均价校验：在程序命令窗口输出分盒调价情况（无论是否为0，均会输出表格）
 
 ## TODO
-- [ ] 表格完整性校验
+- [x] 表格完整性校验
+- [x] 不同分盒，可以设置不同均价
+- [ ] 退补表
 - [ ] 更轻量化的程序打包
 
 ## 打包exe
-`pyinstaller -F main.py -i images/icon.ico`
+`pyinstaller -F GGT.py -i images/icon.ico`
 
 ## 开发者
 邮箱：<xinyi.bit@qq.com>
