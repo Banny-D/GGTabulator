@@ -18,8 +18,8 @@ empty_rows = table_data[table_data.isnull().all(axis=1)].index
 # result = table_data.iloc[empty_rows + 1, 0].tolist()
 # table_data.head()
 # 均价
-price_average = table_data.iloc[0,3]
-print('均价：' + str(price_average))
+price_average_default = table_data.iloc[0,3]
+print('默认均价：' + str(price_average_default))
 # 导入简称表
 try:
     symbol_data = read_excel('symbol.xlsx', header=None)
@@ -53,45 +53,89 @@ num_set_rows = len(group_rows_start)
 
 # 创建购物清单的字典，键为人的名字，值为购物清单的列表
 shopping_lists = {}
+# 创建均价表
+price_average =[]
+
+print('校验：')
 
 for i in range(num_set_rows):
     # 分盒名称
     group_name = table_data.iloc[group_rows_start[i]-1,0]
+
+    # 分盒均价
+    group_price = table_data.iloc[group_rows_start[i]-1,3]
+    if isna(group_price):
+        price_average.append(price_average_default)
+        group_price = price_average_default
+    else:
+        price_average.append(group_price)
+    
+    # 调价校验
+    pricead = table_data.iloc[group_rows_start[i]:group_rows_end[i],1]
+    quan = table_data.iloc[group_rows_start[i]:group_rows_end[i],2]
+    sumpq = sum(pricead*quan)
+    print('     '+group_name+':调价和为'+str(sumpq)+', 均价为'+str(price_average[i]))
+
     # 按行遍历
     for j in range(group_rows_start[i], group_rows_end[i]):
         row = table_data.iloc[j,:]
         item_name = row[0]
         item_pricead = row[1]
         item_quantity = row[2]
+        # 商品数量校验
+        if item_quantity<0:
+            print('错误：第' + str(j+1) + '行商品数量错误')
+            input('按任意键退出程序')
+            exit()
         # 只遍历范围内的cn
         for k in range(3,3+item_quantity):
             cn = row[k]
+            # cn数量少于商品数量的情况
+            if isna(cn):
+                print('错误：第' + str(j+1) + '行cn缺失')
+                input('按任意键退出程序')
+                exit()
             if cn in shopping_lists:
-                shopping_lists[cn]['数量'] += 1
-                shopping_lists[cn]['调价'] += item_pricead
-                # 分组
-                if group_name in shopping_lists[cn]['明细']:
-                    if item_name in shopping_lists[cn]['明细'][group_name]:
-                        shopping_lists[cn]['明细'][group_name][item_name] +=1
+                
+                if group_name in shopping_lists[cn]:
+                    shopping_lists[cn][group_name]['数量'] += 1
+                    shopping_lists[cn][group_name]['调价'] += item_pricead
+                    if item_name in shopping_lists[cn][group_name]['明细']:
+                        shopping_lists[cn][group_name]['明细'][item_name] +=1
                     else:
-                        shopping_lists[cn]['明细'][group_name][item_name] =1
+                        shopping_lists[cn][group_name]['明细'][item_name] =1
                 else:
-                    shopping_lists[cn]['明细'][group_name] = {item_name:1}
+                    shopping_lists[cn][group_name] = {'数量': 1, '调价': item_pricead,
+                                                    '明细': {item_name: 1}, '均价': group_price}
             else:
-                shopping_lists[cn] = {'数量': 1, '调价': item_pricead, 
-                                      '明细': {group_name: {item_name: 1}}}
+                shopping_lists[cn] = {group_name: {'数量': 1, '调价': item_pricead,
+                                                   '明细': {item_name: 1}, '均价': group_price}}
+
+print('统计完成')
+
 # 明细字典改写为字符串
+# 并重构字典结构便于输出
 for cn in shopping_lists:
-    item_quantity = shopping_lists[cn]['数量']
-    item_pricead = shopping_lists[cn]['调价']
-    for group_name in shopping_lists[cn]['明细']:
+    pricesum_str = '='
+    quan_str = '='
+    for group_name in shopping_lists[cn]:
+        item_quantity = shopping_lists[cn][group_name]['数量']
+        item_pricead = shopping_lists[cn][group_name]['调价']
         item_str = ''
-        for item_name in shopping_lists[cn]['明细'][group_name]:
-            item_str += item_name + str(shopping_lists[cn]['明细'][group_name][item_name])
+        group_price = shopping_lists[cn][group_name]['均价']
+        del shopping_lists[cn][group_name]['数量']
+        del shopping_lists[cn][group_name]['调价']
+        del shopping_lists[cn][group_name]['均价']
+        for item_name in shopping_lists[cn][group_name]['明细']:
+            item_str += item_name + str(shopping_lists[cn][group_name]['明细'][item_name])
+        del shopping_lists[cn][group_name]['明细']
         shopping_lists[cn][group_name] = item_str
-    shopping_lists[cn]['总价'] = price_average * item_quantity + item_pricead
+        pricesum_str += '+' + str(group_price * item_quantity + item_pricead)
+        quan_str += '+' + str(item_quantity)
+    shopping_lists[cn]['总价'] = pricesum_str
+    shopping_lists[cn]['总数'] = quan_str
     shopping_lists[cn]['cn'] = cn
-    del shopping_lists[cn]['明细']
+    
 # print(shopping_lists)
 
 
@@ -100,8 +144,8 @@ for cn in shopping_lists:
 shopping_lists_df = DataFrame(shopping_lists).T
 # 按照指定顺序排列列
 shopping_lists_df = shopping_lists_df[[
-    'cn', '数量', '调价', 
-    *[col for col in shopping_lists_df.columns if col not in ['cn', '数量', '调价', '总价']], 
+    'cn', '总数',
+    *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价']], 
     '总价','cn']]
 
 print('清单生成完成')
