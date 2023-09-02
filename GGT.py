@@ -31,7 +31,21 @@ try:
 except FileNotFoundError:
     print('未找到文件\'symbol.xlsx\'用于替换简称，程序继续运行')
 
-
+# 导入退补表
+paid_flag = 1
+try:
+    paid_data = read_excel('paid.xlsx')
+    print('识别到文件\'paid.xlsx\'用于计算退补，程序继续运行')
+    # 将paid_data转换为字典，第1列为键，第2列为值。如果遇到重复的键，则将值相加
+    paid_dict = {}
+    for key, value in zip(paid_data.iloc[:, 0], paid_data.iloc[:, 1]):
+        if key in paid_dict:
+            paid_dict[key] += value
+        else:
+            paid_dict[key] = value
+except FileNotFoundError:
+    print('未找到文件\'paid.xlsx\'，程序继续运行')
+    paid_flag = 0
 
 # 表格行列数
 table_rows = table_data.shape[0]
@@ -113,12 +127,21 @@ for i in range(num_set_rows):
 
 print('统计完成')
 
+# 计算退补
+for cn in paid_dict:
+    if cn in shopping_lists:
+        shopping_lists[cn]['已交'] = paid_dict[cn]
+    else:
+        shopping_lists[cn] = {'已交': paid_dict[cn]}
+
 # 明细字典改写为字符串
 # 并重构字典结构便于输出
 for cn in shopping_lists:
     pricesum_str = '='
     quan_str = '='
     for group_name in shopping_lists[cn]:
+        if group_name == '已交':
+            continue
         item_quantity = shopping_lists[cn][group_name]['数量']
         item_pricead = shopping_lists[cn][group_name]['调价']
         item_str = ''
@@ -132,6 +155,9 @@ for cn in shopping_lists:
         shopping_lists[cn][group_name] = item_str
         pricesum_str += '+' + str(group_price * item_quantity + item_pricead)
         quan_str += '+' + str(item_quantity)
+    # 最后减去已交，用于计算退补
+    if '已交' in shopping_lists[cn]:
+        pricesum_str += '-' + str(shopping_lists[cn]['已交'])
     shopping_lists[cn]['总价'] = pricesum_str
     shopping_lists[cn]['总数'] = quan_str
     shopping_lists[cn]['cn'] = cn
@@ -145,8 +171,8 @@ shopping_lists_df = DataFrame(shopping_lists).T
 # 按照指定顺序排列列
 shopping_lists_df = shopping_lists_df[[
     'cn', '总数',
-    *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价']], 
-    '总价','cn']]
+    *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价','已交']], 
+    '已交','总价','cn']]
 
 print('清单生成完成')
 
@@ -200,6 +226,20 @@ for row_num in range(1, shopping_lists_df.shape[0]+1):
             worksheet.write(row_num, col_num, '', format)
         else:
             worksheet.write(row_num, col_num, value, format)
+
+# 添加条件格式
+if paid_flag:
+    highlight_format_positive = workbook.add_format({'font_color': '#FFA500'})  # Orange color for positive values
+    highlight_format_negative = workbook.add_format({'font_color': '#4F81BD'})  # Blue color for zero or negative values
+    worksheet.conditional_format('F2:F{}'.format(shopping_lists_df.shape[0]+1), {'type': 'cell',
+                                                                                'criteria': '>',
+                                                                                'value': 0,
+                                                                                'format': highlight_format_positive})
+    worksheet.conditional_format('F2:F{}'.format(shopping_lists_df.shape[0]+1), {'type': 'cell',
+                                                                                'criteria': '<=',
+                                                                                'value': 0,
+                                                                                'format': highlight_format_negative})
+
 
 # 在最后一行的后面一行的第2、3、倒数第二列的单元格添加字符串
 last_row = shopping_lists_df.shape[0]
