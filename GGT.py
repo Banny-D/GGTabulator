@@ -128,11 +128,12 @@ for i in range(num_set_rows):
 print('统计完成')
 
 # 计算退补
-for cn in paid_dict:
-    if cn in shopping_lists:
-        shopping_lists[cn]['已交'] = paid_dict[cn]
-    else:
-        shopping_lists[cn] = {'已交': paid_dict[cn]}
+if paid_flag:
+    for cn in paid_dict:
+        if cn in shopping_lists:
+            shopping_lists[cn]['已交'] = paid_dict[cn]
+        else:
+            shopping_lists[cn] = {'已交': paid_dict[cn]}
 
 # 明细字典改写为字符串
 # 并重构字典结构便于输出
@@ -169,10 +170,16 @@ for cn in shopping_lists:
 # 将shopping_lists转换为DataFrame
 shopping_lists_df = DataFrame(shopping_lists).T
 # 按照指定顺序排列列
-shopping_lists_df = shopping_lists_df[[
-    'cn', '总数',
-    *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价','已交']], 
-    '已交','总价','cn']]
+if paid_flag:
+    shopping_lists_df = shopping_lists_df[[
+        'cn', '总数',
+        *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价','已交']], 
+        '已交','总价','cn']]
+else:
+    shopping_lists_df = shopping_lists_df[[
+        'cn', '总数',
+        *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价']], 
+        '总价','cn']]
 
 print('清单生成完成')
 
