@@ -243,15 +243,22 @@ for row_num in range(1, shopping_lists_df.shape[0]+1):
 if paid_flag:
     highlight_format_positive = workbook.add_format({'font_color': '#FFA500'})  # Orange color for positive values
     highlight_format_negative = workbook.add_format({'font_color': '#4F81BD'})  # Blue color for zero or negative values
-    worksheet.conditional_format('F2:F{}'.format(shopping_lists_df.shape[0]+1), {'type': 'cell',
-                                                                                'criteria': '>',
-                                                                                'value': 0,
-                                                                                'format': highlight_format_positive})
-    worksheet.conditional_format('F2:F{}'.format(shopping_lists_df.shape[0]+1), {'type': 'cell',
-                                                                                'criteria': '<=',
-                                                                                'value': 0,
-                                                                                'format': highlight_format_negative})
-
+    # 获取倒数第二列的列号
+    second_last_col = shopping_lists_df.shape[1] - 2
+    worksheet.conditional_format('{}2:{}{}'.format(chr(65 + second_last_col),
+                                                    chr(65 + second_last_col),
+                                                    shopping_lists_df.shape[0]+1), 
+                                    {'type': 'cell',
+                                    'criteria': '>',
+                                    'value': 0,
+                                    'format': highlight_format_positive})
+    worksheet.conditional_format('{}2:{}{}'.format(chr(65 + second_last_col),
+                                                    chr(65 + second_last_col),
+                                                    shopping_lists_df.shape[0]+1), 
+                                    {'type': 'cell',
+                                    'criteria': '<=',
+                                    'value': 0,
+                                    'format': highlight_format_negative})
 
 # 在最后一行的后面一行的第2、3、倒数第二列的单元格添加字符串
 last_row = shopping_lists_df.shape[0]
