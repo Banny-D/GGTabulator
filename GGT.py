@@ -35,7 +35,6 @@ except FileNotFoundError:
 paid_flag = 1
 try:
     paid_data = read_excel('paid.xlsx')
-    print('识别到文件\'paid.xlsx\'用于计算退补，程序继续运行')
     # 将paid_data转换为字典，第1列为键，第2列为值。如果遇到重复的键，则将值相加
     paid_dict = {}
     for key, value in zip(paid_data.iloc[:, 0], paid_data.iloc[:, 1]):
@@ -43,6 +42,12 @@ try:
             paid_dict[key] += value
         else:
             paid_dict[key] = value
+    # 判断paid表格是否为空
+    if paid_dict == {}:
+        paid_flag = 0
+        print('识别到文件\'paid.xlsx\'但表格内容为空，不计算退补，程序继续运行')
+    else:
+        print('识别到文件\'paid.xlsx\'用于计算退补，程序继续运行')
 except FileNotFoundError:
     print('未找到文件\'paid.xlsx\'，程序继续运行')
     paid_flag = 0
