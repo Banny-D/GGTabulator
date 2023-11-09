@@ -75,11 +75,16 @@ shopping_lists = {}
 # 创建均价表
 price_average =[]
 
+# 创建分盒顺序表，便于后续按照顺序输出分盒明细栏
+group_order = []
+
 print('校验：')
 
 for i in range(num_set_rows):
     # 分盒名称
     group_name = table_data.iloc[group_rows_start[i]-1,0]
+    # 更新分盒顺序表
+    group_order.append(group_name)
 
     # 分盒均价
     group_price = table_data.iloc[group_rows_start[i]-1,3]
@@ -176,15 +181,18 @@ for cn in shopping_lists:
 shopping_lists_df = DataFrame(shopping_lists).T
 # 按照指定顺序排列列
 if paid_flag:
-    shopping_lists_df = shopping_lists_df[[
-        'cn', '总数',
-        *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价','已交']], 
-        '已交','总价','cn']]
+    group_order.insert(0,'总数')
+    group_order.insert(0,'cn')
+    group_order.append('已交')
+    group_order.append('总价')
+    group_order.append('cn')
+    shopping_lists_df = shopping_lists_df[group_order]
 else:
-    shopping_lists_df = shopping_lists_df[[
-        'cn', '总数',
-        *[col for col in shopping_lists_df.columns if col not in ['cn', '总数','总价']], 
-        '总价','cn']]
+    group_order.insert(0,'总数')
+    group_order.insert(0,'cn')
+    group_order.append('总价')
+    group_order.append('cn')
+    shopping_lists_df = shopping_lists_df[group_order]
 
 print('清单生成完成')
 
