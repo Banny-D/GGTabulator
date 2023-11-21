@@ -12,14 +12,16 @@ my_email = 'xinyi.bit@qq.com'
 # 导入表格
 try:
     table_data = read_excel('input.xlsx', header=None)
+    invalid_rows = table_data[table_data.iloc[:, 0].isnull()].index
+    if len(invalid_rows) > 0:
+        print('警告: 输入文件中第{}行为无效行，删除后程序继续运行。'.format(list(invalid_rows+1)))
+        table_data = table_data.drop(invalid_rows).reset_index(drop=True)
+        print('      若结果有误，请再次检查输入文件并删除第一列为空的行。')
 except FileNotFoundError:
     print('未找到文件\'input.xlsx\'')
     input('按任意键退出程序')
     exit()
 
-empty_rows = table_data[table_data.isnull().all(axis=1)].index
-# result = table_data.iloc[empty_rows + 1, 0].tolist()
-# table_data.head()
 # 均价
 price_average_default = table_data.iloc[0,3]
 print('默认均价：{:.2f}'.format(price_average_default))
@@ -96,23 +98,28 @@ for i in range(num_set_rows):
         group_price = price_average_default
     else:
         price_average.append(group_price)
-    
-    # 调价校验
-    pricead = table_data.iloc[group_rows_start[i]:group_rows_end[i],1]
-    quan = table_data.iloc[group_rows_start[i]:group_rows_end[i],2]
-    sumpq = sum(pricead*quan)
-    print('     '+group_name+':调价和为{:.2f}, 均价为{:.2f}, 分盒总价为{:.2f}'
-          .format(sumpq, price_average[i], sum((group_price + pricead)*quan)))
 
     # 按行遍历
     for j in range(group_rows_start[i], group_rows_end[i]):
         row = table_data.iloc[j,:]
-        item_name = row[0]
+        item_name = str(row[0])
         item_pricead = row[1]
-        item_quantity = row[2]
+        item_quantity = row[2]        
+        
+        # 商品名称校验
+        if item_name[0].isdigit() or item_name[-1].isdigit():
+            # 在以数字开头或结尾的商品名称前后增加标识符
+            item_name = '/' + item_name + ':'
+
         # 商品数量校验
         if item_quantity<0:
             print('错误：第' + str(j+1) + '行商品数量错误')
+            print('请检查调价列与数量列的顺序是否有误')
+            input('按任意键退出程序')
+            exit()
+        elif not isinstance(item_quantity, int):
+            print('错误：第' + str(j+1) + '行商品数量错误')
+            print('请检查该行商品数量是否为空或不是整数')
             input('按任意键退出程序')
             exit()
         # 只遍历范围内的cn
@@ -121,6 +128,7 @@ for i in range(num_set_rows):
             # cn数量少于商品数量的情况
             if isna(cn):
                 print('错误：第' + str(j+1) + '行cn缺失')
+                print('请检查cn列表, 配比数范围内不要有空的单元格')
                 input('按任意键退出程序')
                 exit()
             if cn in shopping_lists:
@@ -138,6 +146,12 @@ for i in range(num_set_rows):
             else:
                 shopping_lists[cn] = {group_name: {'数量': 1, '调价': item_pricead,
                                                    '明细': {item_name: 1}, '均价': group_price}}
+    # 调价校验
+    pricead = table_data.iloc[group_rows_start[i]:group_rows_end[i],1]
+    quan = table_data.iloc[group_rows_start[i]:group_rows_end[i],2]
+    sumpq = sum(pricead*quan)
+    print('     '+group_name+'：调价和为{:.2f}，均价为{:.2f}，分盒总价为{:.2f}'
+          .format(sumpq, price_average[i], sum((group_price + pricead)*quan)))
 
 print('统计完成')
 
@@ -151,7 +165,6 @@ if paid_flag:
 
 # 明细字典改写为字符串
 # 并重构字典结构便于输出
-# shopping_lists_copy = shopping_lists
 for cn in shopping_lists:
     pricesum_str = '='
     quan_str = '='
