@@ -82,6 +82,7 @@ price_average =[]
 
 # 创建分盒顺序表，便于后续按照顺序输出分盒明细栏
 group_order = []
+group_order_full = []
 
 print('校验：')
 
@@ -90,6 +91,9 @@ for i in range(num_set_rows):
     group_name = table_data.iloc[group_rows_start[i]-1,0]
     # 更新分盒顺序表
     group_order.append(group_name)
+    group_order_full.append(group_name)
+    group_order_full.append(group_name+'总数')
+    group_order_full.append(group_name+'总价')
 
     # 分盒均价
     group_price = table_data.iloc[group_rows_start[i]-1,3]
@@ -131,21 +135,25 @@ for i in range(num_set_rows):
                 print('请检查cn列表, 配比数范围内不要有空的单元格')
                 input('按任意键退出程序')
                 exit()
+            # cn存在于shoppinglist时
             if cn in shopping_lists:
-                
                 if group_name in shopping_lists[cn]:
-                    shopping_lists[cn][group_name]['数量'] += 1
-                    shopping_lists[cn][group_name]['调价'] += item_pricead
-                    if item_name in shopping_lists[cn][group_name]['明细']:
-                        shopping_lists[cn][group_name]['明细'][item_name] +=1
+                    shopping_lists[cn][group_name + '总数'] += 1
+                    shopping_lists[cn][group_name + '总价'] += group_price + item_pricead
+                    if item_name in shopping_lists[cn][group_name]:
+                        shopping_lists[cn][group_name][item_name] += 1
                     else:
-                        shopping_lists[cn][group_name]['明细'][item_name] =1
+                        shopping_lists[cn][group_name][item_name] = 1
                 else:
-                    shopping_lists[cn][group_name] = {'数量': 1, '调价': item_pricead,
-                                                    '明细': {item_name: 1}, '均价': group_price}
+                    shopping_lists[cn][group_name] = {item_name: 1}
+                    shopping_lists[cn][group_name + '总数'] = 1
+                    shopping_lists[cn][group_name + '总价'] = group_price + item_pricead
+            # cn没有被统计过，新建一个以cn为键的键值对
             else:
-                shopping_lists[cn] = {group_name: {'数量': 1, '调价': item_pricead,
-                                                   '明细': {item_name: 1}, '均价': group_price}}
+                # shopping_lists[cn] = {group_name: {'数量': 1, '调价': item_pricead,
+                #                                    '明细': {item_name: 1}, '均价': group_price}}
+                shopping_lists[cn] = {group_name: {item_name: 1}, group_name+'总数': 1, 
+                                      group_name+'总价': group_price + item_pricead}
     # 调价校验
     pricead = table_data.iloc[group_rows_start[i]:group_rows_end[i],1]
     quan = table_data.iloc[group_rows_start[i]:group_rows_end[i],2]
@@ -168,28 +176,29 @@ if paid_flag:
 for cn in shopping_lists:
     pricesum_str = '='
     quan_str = '='
-    for group_name in shopping_lists[cn]:
-        if group_name == '已交':
+    for group_name in group_order:
+        if not (group_name in shopping_lists[cn]):
             continue
-        item_quantity = shopping_lists[cn][group_name]['数量']
-        item_pricead = shopping_lists[cn][group_name]['调价']
+
+        item_quantity = shopping_lists[cn][group_name + '总数']
+        item_pricead = shopping_lists[cn][group_name + '总价']
         item_str = ''
-        group_price = shopping_lists[cn][group_name]['均价']
-        del shopping_lists[cn][group_name]['数量']
-        del shopping_lists[cn][group_name]['调价']
-        del shopping_lists[cn][group_name]['均价']
-        for item_name in shopping_lists[cn][group_name]['明细']:
-            item_str += item_name + str(shopping_lists[cn][group_name]['明细'][item_name])
-        del shopping_lists[cn][group_name]['明细']
+        
+        for item_name in shopping_lists[cn][group_name]:
+            item_str += item_name + str(shopping_lists[cn][group_name][item_name])
         shopping_lists[cn][group_name] = item_str
         pricesum_str += '+' + '{:.2f}'.format(group_price * item_quantity + item_pricead)
         quan_str += '+' + '{:.2f}'.format(item_quantity)
-    # 最后减去已交，用于计算退补
-    if '已交' in shopping_lists[cn]:
-        pricesum_str += '-' + '{:.2f}'.format(shopping_lists[cn]['已交'])
+    
     shopping_lists[cn]['总价'] = pricesum_str
     shopping_lists[cn]['总数'] = quan_str
     shopping_lists[cn]['cn'] = cn
+    shopping_lists[cn]['蓝退红补'] = pricesum_str
+    # 最后减去已交，用于计算退补
+    if '已交' in shopping_lists[cn]:
+        pricesum_str += '-' + '{:.2f}'.format(shopping_lists[cn]['已交'])
+        shopping_lists[cn]['蓝退红补'] = pricesum_str
+    
     
 # print(shopping_lists)
 
@@ -198,19 +207,16 @@ for cn in shopping_lists:
 # 将shopping_lists转换为DataFrame
 shopping_lists_df = DataFrame(shopping_lists).T
 # 按照指定顺序排列列
+group_order_full.insert(0,'cn')
+if num_set_rows > 1:
+    group_order_full.append('总数')
+    group_order_full.append('总价')
 if paid_flag:
-    group_order.insert(0,'总数')
-    group_order.insert(0,'cn')
-    group_order.append('已交')
-    group_order.append('总价')
-    group_order.append('cn')
-    shopping_lists_df = shopping_lists_df[group_order]
-else:
-    group_order.insert(0,'总数')
-    group_order.insert(0,'cn')
-    group_order.append('总价')
-    group_order.append('cn')
-    shopping_lists_df = shopping_lists_df[group_order]
+    group_order_full.append('已交')
+    group_order_full.append('总价')
+    group_order_full.append('蓝退红补')
+group_order_full.append('cn')
+shopping_lists_df = shopping_lists_df[group_order_full]
 
 print('清单生成完成')
 
@@ -258,6 +264,7 @@ even_format = workbook.add_format({
 # 设置表头格式
 for col_num, value in enumerate(shopping_lists_df.columns.values):
     worksheet.write(0, col_num, value, header_format)
+worksheet.freeze_panes(1, 0)  # 冻结第一行
 
 # 设置单数行和偶数行格式
 for row_num in range(1, shopping_lists_df.shape[0]+1):
@@ -273,8 +280,8 @@ for row_num in range(1, shopping_lists_df.shape[0]+1):
 
 # 添加条件格式
 if paid_flag:
-    highlight_format_positive = workbook.add_format({'font_color': '#FFA500'})  # Orange color for positive values
-    highlight_format_negative = workbook.add_format({'font_color': '#4F81BD'})  # Blue color for zero or negative values
+    highlight_format_positive = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#9C0006'})  # Orange color for positive values
+    highlight_format_negative = workbook.add_format({'bg_color': '#DCE6F1', 'font_color': '#00008B'})  # Blue color for zero or negative values
     # 获取倒数第二列的列号
     second_last_col = shopping_lists_df.shape[1] - 2
     worksheet.conditional_format('{}2:{}{}'.format(chr(65 + second_last_col),
@@ -295,7 +302,7 @@ if paid_flag:
 # 在最后一行的后面一行的第2、3、倒数第二列的单元格添加字符串
 last_row = shopping_lists_df.shape[0]
 last_col = shopping_lists_df.shape[1]
-cell_sum = [1,2,last_col-2]
+cell_sum = range(2,last_col-1)
 for i in cell_sum:
     cell_num = chr(65 +i)
     cell_num = '=sum(' + cell_num + '2:' + cell_num + str(last_row+1) + ')'
