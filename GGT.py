@@ -25,7 +25,7 @@ def main():
     # 找出分盒的开始位置和结束位置
     group_rows = [0] + table_data[table_data.iloc[:,1].isnull()].index.tolist()
     group_start = [i+1 for i in group_rows]
-    group_end = [i-1 for i in group_rows[1:]] + [table_data.shape[0]-1]
+    group_end = [i for i in group_rows[1:]] + [table_data.shape[0]]
     # 分盒的数量
     num_set_rows = len(group_rows)
 
