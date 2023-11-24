@@ -1,5 +1,6 @@
 build/
-dist/*.xlsx
+dist/
+__pycache__/
 output.xlsx
 README.md
 GGT.spec
