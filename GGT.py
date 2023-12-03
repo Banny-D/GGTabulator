@@ -137,7 +137,7 @@ def main():
             for item_name in shopping_lists[cn][group_name]:
                 item_str += item_name + str(shopping_lists[cn][group_name][item_name])
             shopping_lists[cn][group_name] = item_str
-            pricesum_str += '+' + '{:.2f}'.format(group_price * item_quantity + item_pricead)
+            pricesum_str += '+' + '{:.2f}'.format(item_pricead)
             quan_str += '+' + '{:.2f}'.format(item_quantity)
         
         shopping_lists[cn]['总价'] = pricesum_str
@@ -158,7 +158,6 @@ def main():
         group_order_full.append('总价')
     if paid_dict != {}:
         group_order_full.append('已交')
-        group_order_full.append('总价')
         group_order_full.append('蓝退红补')
     group_order_full.append('cn')
     shopping_lists_df = shopping_lists_df[group_order_full]
