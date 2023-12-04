@@ -78,7 +78,8 @@ python版本：python3.9.0
 `pip install -r requirements.txt`
 
 ## 打包exe
-`pyinstaller -F GGT.py -i images/icon.ico`
+Win: `pyinstaller -F GGT.py -i images/icon.ico`
+MacOS: `pyinstaller -F -i images/icon.icns GGT.py`
 
 ## 开发者
 邮箱：<xinyi.bit@qq.com>
