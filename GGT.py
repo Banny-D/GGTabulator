@@ -229,16 +229,16 @@ def main():
         highlight_format_negative = workbook.add_format({'bg_color': '#DCE6F1', 'font_color': '#00008B'})  # Blue color for zero or negative values
         # 获取倒数第二列的列号
         second_last_col = shopping_lists_df.shape[1] - 2
-        worksheet.conditional_format('{}2:{}{}'.format(chr(65 + second_last_col),
-                                                        chr(65 + second_last_col),
-                                                        shopping_lists_df.shape[0]+1), 
+        worksheet.conditional_format('{}2:{}{}'.format(get_column_letter(second_last_col),
+                                                get_column_letter(second_last_col),
+                                                shopping_lists_df.shape[0]+1), 
                                         {'type': 'cell',
                                         'criteria': '>',
                                         'value': 0,
                                         'format': highlight_format_positive})
-        worksheet.conditional_format('{}2:{}{}'.format(chr(65 + second_last_col),
-                                                        chr(65 + second_last_col),
-                                                        shopping_lists_df.shape[0]+1), 
+        worksheet.conditional_format('{}2:{}{}'.format(get_column_letter(second_last_col),
+                                                get_column_letter(second_last_col),
+                                                shopping_lists_df.shape[0]+1), 
                                         {'type': 'cell',
                                         'criteria': '<=',
                                         'value': 0,
@@ -249,7 +249,7 @@ def main():
     last_col = shopping_lists_df.shape[1]
     cell_sum = range(2,last_col-1)
     for i in cell_sum:
-        cell_num = chr(65 +i)
+        cell_num = get_column_letter(i)
         cell_num = '=sum(' + cell_num + '2:' + cell_num + str(last_row+1) + ')'
         worksheet.write(last_row +2 , i, cell_num, None)
 

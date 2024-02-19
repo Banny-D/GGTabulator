@@ -1,8 +1,10 @@
 build/
 dist/
-__pycache__/*
+__pycache__/
 output.xlsx
 README.md
 GGT.spec
 ~$*
-__pycache__/ggt_functions.cpython-39.pyc
+*.pyc
+*.xlsx
+!input.xlsx

@@ -81,3 +81,13 @@ def validate(lst):
             result.append(item)
     return result
 
+def get_column_letter(column_index):
+    """
+    将列号转换为Excel列的字母表示。
+    例如，0 -> 'A', 1 -> 'B', ..., 26 -> 'AA'
+    """
+    letter = ''
+    while column_index >= 0:
+        letter = chr(column_index % 26 + 65) + letter
+        column_index = column_index // 26 - 1
+    return letter
