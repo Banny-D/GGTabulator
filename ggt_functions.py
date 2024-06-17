@@ -1,9 +1,8 @@
-from pandas import read_excel
-from pandas import DataFrame
-from pandas import ExcelWriter
-from pandas import isna
 import os
 from collections import defaultdict
+
+from pandas import DataFrame, ExcelWriter, isna, read_excel
+
 
 def file_not_found(filename):
     if filename == 'input.xlsx':
@@ -11,12 +10,15 @@ def file_not_found(filename):
     else:
         print(f'未找到文件\'{filename}\'')
     key = input('按回车重启程序')
-    if key == 'q': exit()
+    if key == 'q':
+        exit()
+
 
 def get_file_name():
     while True:
         try:
-            filename = input('拖动输入文件到窗口内，直接输入回车则使用默认文件input.xlsx') or 'input.xlsx'
+            filename = input(
+                '拖动输入文件到窗口内，直接输入回车则使用默认文件input.xlsx') or 'input.xlsx'
             filename = filename.strip('"')
             if os.path.exists(filename):
                 return filename
@@ -25,9 +27,10 @@ def get_file_name():
         except FileNotFoundError:
             file_not_found(filename)
 
+
 def import_file(filename):
     table_data = read_excel(filename, header=None)
-    
+
     # 校验table数据第一列
     invalid_rows = table_data[table_data.iloc[:, 0].isnull()].index
     if len(invalid_rows) > 0:
@@ -36,7 +39,7 @@ def import_file(filename):
         table_data = table_data.drop(invalid_rows).reset_index(drop=True)
         print('      若结果有误，请再次检查输入文件并使第一列没有空的单元格。')
         print('\033[0m')
-    
+
     # 试导入简称表
     try:
         symbol_data = read_excel(filename, header=None, sheet_name='symbol')
@@ -48,8 +51,9 @@ def import_file(filename):
     except:
         print('未找到子表\'symbol\'用于替换简称，程序继续运行')
         return table_data
-    
+
     return table_data
+
 
 def import_paidfile(filename):
     paid_dict = {}
@@ -70,6 +74,7 @@ def import_paidfile(filename):
         print('未找到退补表，程序继续运行')
     return paid_dict
 
+
 def validate(lst):
     counts = defaultdict(int)
     result = []
@@ -80,6 +85,7 @@ def validate(lst):
         else:
             result.append(item)
     return result
+
 
 def get_column_letter(column_index):
     """
