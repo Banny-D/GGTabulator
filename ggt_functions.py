@@ -1,10 +1,15 @@
+# pyright:reportUnknownVariableType=false
+# pyright:reportUnknownMemberType=false
+# pyright:reportAttributeAccessIssue=false
+# pyright:reportUnknownArgumentType=false
+# pyright:reportMissingTypeStubs=false
 import os
 from collections import defaultdict
 
-from pandas import DataFrame, ExcelWriter, isna, read_excel
+from pandas import DataFrame, read_excel
 
 
-def file_not_found(filename):
+def file_not_found(filename: str) -> None:
     if filename == 'input.xlsx':
         print('未找到文件\'input.xlsx\'，请确保exe文件和表格文件处于同一目录下')
     else:
@@ -12,24 +17,25 @@ def file_not_found(filename):
     key = input('按回车重启程序')
     if key == 'q':
         exit()
+    else:
+        return
 
 
-def get_file_name():
+def get_file_name(prompt:str) -> str:
     while True:
-        try:
-            filename = input(
-                '拖动输入文件到窗口内，直接输入回车则使用默认文件input.xlsx') or 'input.xlsx'
-            filename = filename.strip('"')
-            if os.path.exists(filename):
-                return filename
-            else:
-                file_not_found(filename)
-        except FileNotFoundError:
+        filename = input(f'{prompt}\n>').strip(
+            '"') or 'input.xlsx'
+        if os.path.exists(filename):
+            return filename
+        else:
             file_not_found(filename)
 
 
-def import_file(filename):
-    table_data = read_excel(filename, header=None)
+def import_file(filename: str) -> DataFrame:
+    table_data: DataFrame = read_excel(filename, header=None)
+
+    def replace_symbol(x: str) -> str:
+        return symbol_dict.get(x, x)
 
     # 校验table数据第一列
     invalid_rows = table_data[table_data.iloc[:, 0].isnull()].index
@@ -46,8 +52,7 @@ def import_file(filename):
         # 将symbol表转换为字典，第1列为键，第2列为值
         symbol_dict = dict(zip(symbol_data.iloc[:, 0], symbol_data.iloc[:, 1]))
         # 在表中商品名称替换为简称，找不到对应的就不替换
-        table_data.iloc[:, 0] = table_data.iloc[:, 0].apply(
-            lambda x: symbol_dict.get(x, x))
+        table_data.iloc[:, 0] = table_data.iloc[:, 0].apply(replace_symbol)
     except:
         print('未找到子表\'symbol\'用于替换简称，程序继续运行')
         return table_data
@@ -55,8 +60,8 @@ def import_file(filename):
     return table_data
 
 
-def import_paidfile(filename):
-    paid_dict = {}
+def import_paidfile(filename: str):
+    paid_dict: dict[str, float] = defaultdict(float)
     try:
         paid_data = read_excel(filename, sheet_name='paid')
         # 将paid_data转换为字典，第1列为键，第2列为值。如果遇到重复的键，则将值相加
@@ -75,19 +80,19 @@ def import_paidfile(filename):
     return paid_dict
 
 
-def validate(lst):
-    counts = defaultdict(int)
-    result = []
+def validate(lst: list[str]) -> list[str]:
+    counts: dict[str, int] = defaultdict(int)
+    validated_lst: list[str] = []
     for item in lst:
         counts[item] += 1
         if counts[item] > 1:
-            result.append(f'{item}_{chr(48 + counts[item])}')
+            validated_lst.append(f'{item}_{chr(48 + counts[item])}')
         else:
-            result.append(item)
-    return result
+            validated_lst.append(item)
+    return validated_lst
 
 
-def get_column_letter(column_index):
+def get_column_letter(column_index: int) -> str:
     """
     将列号转换为Excel列的字母表示。
     例如，0 -> 'A', 1 -> 'B', ..., 26 -> 'AA'
