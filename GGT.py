@@ -26,7 +26,7 @@ class UserValueError(ValueError):
 
 def main():
 
-    file_name = get_file_name()
+    file_name = get_file_name("拖动输入文件到窗口内，直接输入回车则使用默认文件input.xlsx")
     # 导入表格
     table_data = import_file(file_name)
 
@@ -54,7 +54,7 @@ def main():
     #                                   '明细': {item_name: 1},
     #                                   '均价': group_price }}
     # 创建均价表
-    price_average = []
+    price_average: list[float] = []
 
     # 创建分盒顺序表，便于后续按照顺序输出分盒明细栏
     group_name_list: list[str] = table_data.iloc[group_rows, 0].tolist()
@@ -161,7 +161,7 @@ def main():
         # 调价校验
         floating_list: list[float] = (
             table_data.iloc[group_start[i]:group_end[i], 1].tolist())
-        box_count_list: list[float] = table_data.iloc[group_start[i]                                                      :group_end[i], 2].tolist()
+        box_count_list: list[float] = table_data.iloc[group_start[i]:group_end[i], 2].tolist()
         floating_sum = numpy.dot(floating_list, box_count_list)
         box_sum = numpy.dot(
             (group_price + numpy.array(floating_list)), box_count_list)
@@ -301,11 +301,11 @@ def main():
             {'bg_color': '#DCE6F1', 'font_color': '#00008B'})  # Blue color for zero or negative values
         # 获取倒数第二列的列号
         price_diff_col = shopping_lists_df.shape[1] - 2
-        row_max = shopping_lists_df.shape[0] + 1
-        worksheet.conditional_format(2, price_diff_col, row_max, price_diff_col, {
+        row_max = shopping_lists_df.shape[0]
+        worksheet.conditional_format(1, price_diff_col, row_max, price_diff_col, {
             'type': 'cell', 'criteria': '>', 'value': 0, 'format': highlight_format_positive
         })
-        worksheet.conditional_format(2, price_diff_col, row_max, price_diff_col, {
+        worksheet.conditional_format(1, price_diff_col, row_max, price_diff_col, {
             'type': 'cell', 'criteria': '<=', 'value': 0, 'format': highlight_format_negative
         })
 
