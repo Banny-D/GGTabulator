@@ -19,6 +19,9 @@ def main():
 
     # 均价
     price_average_default = table_data.iloc[0,3]
+    if not isinstance(price_average_default, (int, float)):
+        print('均价位置错误，请检查第一行各单元格是否正确。')
+        return 0
     if isna(price_average_default): price_average_default = 0
     print('默认均价：{:.2f}'.format(price_average_default))
 
